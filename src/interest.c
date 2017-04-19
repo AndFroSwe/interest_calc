@@ -3,7 +3,6 @@
  * Author: andfro
  * Description: Calculates monthly costs for a loan.
  * Todo-list:
- * TODO: Make window for output.
  * TODO: Clear output before printing new
  */
 
@@ -22,7 +21,7 @@ int main()
     FIELD *inputs[NO_INPUTS + 1];   // Create fields
     char *field_names[] = { // Names to be printed with fields
         "Huspris [MKr]",
-        "Ränta [procent]"
+        "Ränta [%]"
     };
 
     // Initialize curses
@@ -112,14 +111,16 @@ int main()
     // Enum and array must match
     typedef enum output_fields {
         o_total,    // Total price
-        o_bottom,
-        o_top,
+        o_bottom,   // Bottom loan
+        o_top,      // Top loan
+        o_bot_year, // Yearly interest in kr
         NO_OUTPUTS  // Used for indexing, should always be last
     } Output_fields;
     char *outputs[] = {
         "Pris:",
         "Bottenlån:",
-        "Topplån:"
+        "Topplån:",
+        "Arsränta, botten:"
     };
     // Create output window
     WINDOW *output_win = NULL;
@@ -184,14 +185,20 @@ int main()
             // Input characters
             case ENTER:
                 form_driver(input_form, REQ_VALIDATION); // To force validation
-                // Get data
+                // Get data. I have just added a _t to these variables to
+                // separate them from other vars.
                 double total_t = get_field_as_double(inputs[total_cost], 0);
+                double bot_int_t = get_field_as_double(inputs[interest], 0);
                 double bottom_t = calc_bottom(total_t);
+                // Calculate data
+                double top_t = total_t - bottom_t;
+                double bot_int_year_t = bottom_t*bot_int_t/100*1e6; // Calculate year 1 interest
                 create_output(
                         output_win,
                         total_t,
                         bottom_t,
-                        total_t - bottom_t
+                        top_t,
+                        bot_int_year_t
                         );
                 break;
             case MAC_BACKSPACE:
@@ -225,10 +232,12 @@ void create_output(
         WINDOW *w,
         double total, 
         double bottom,
-        double top
+        double top,
+        double bot_int
         )
 {
-    
+    // Parameters
+    char delim[] = "--------------------------------------"; // Delimiter between rows
     int x = 20; // x value to print from
     int y = 3; // First y value to print
     int i = 0; // Index variable
@@ -236,7 +245,11 @@ void create_output(
     mvwprintw(w, y + (i++)*2, x, "%0.2f miljoner kr", total);
     mvwprintw(w, y + (i++)*2, x, "%1.2f miljoner kr", bottom);
     mvwprintw(w, y + (i++)*2, x, "%1.2f miljoner kr", top);
+    mvwprintw(w, y + (i)*2-1, 1, delim);
+    mvwprintw(w, y + (i++)*2, x, "%1.2f kr", bot_int);
 
+
+    mvprintw(30, 10, "Character was: %d", i);
     wrefresh(w); // Write to window
 }
 

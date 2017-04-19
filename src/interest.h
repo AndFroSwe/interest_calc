@@ -21,7 +21,8 @@ void create_output(     // Create formatted output in window w
         WINDOW *w,      // Output window
         double total,   // Total base cost
         double bottom,  // Bottom loan
-        double top      // Top loan
+        double top,      // Top loan,
+        double bot_int // Interest on bottom loan
         );
 double get_field_as_double(FIELD *f, int i); // Get field value as double. I have no idea what the second argument does, just set it to 0
 void print_in_middle_of_win( // Print string c in the middle of window w
